@@ -1,6 +1,7 @@
 import urllib.request
 import urllib.parse
 import argparse
+import xml.etree.ElementTree as ET
 
 
 BASE_URL = 'http://export.arxiv.org/api/query?search_query='
@@ -20,15 +21,21 @@ input_keywords = input('Please enter the keywords or search phrases separated by
 def make_query(url=BASE_URL, prefix=PREFIX['All'], keywords=input_keywords):
     keywords = urllib.parse.quote(keywords)
     print(keywords)
-    url = f'{BASE_URL}{prefix}:"{keywords}"'
+    url = f'{url}{prefix}:"{keywords}"'
     print(url)
     req = urllib.request.Request(url)
     with urllib.request.urlopen(req) as response:
         if response.status == 200:
-            r = response.read()
-            print(r)
+            tree = ET.parse(response)
+            root = tree.getroot()
         else:
             print('Please, check the correctness of the request')
+
+    articles = []
+    for entry in root.findall('entry'):
+        title = entry.find('title').text
+        articles.append(title)
+    print(articles)
 
 
 def main():
