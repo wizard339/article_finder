@@ -2,7 +2,8 @@ import urllib.request
 import urllib.parse
 import argparse
 import xml.etree.ElementTree as ET
-
+from bs4 import BeautifulSoup
+import pandas as pd
 
 BASE_URL = 'http://export.arxiv.org/api/query?search_query='
 PREFIX = {'Title': 'ti',
@@ -15,7 +16,8 @@ PREFIX = {'Title': 'ti',
           'ID': 'id',
           'All': 'all'}
 
-input_keywords = input('Please enter the keywords or search phrases separated by commas: ')
+# input_keywords = input('Please enter the keywords or search phrases separated by commas: ')
+input_keywords = 'reinforcement learning'
 
 
 def make_query(url=BASE_URL, prefix=PREFIX['All'], keywords=input_keywords):
@@ -26,16 +28,26 @@ def make_query(url=BASE_URL, prefix=PREFIX['All'], keywords=input_keywords):
     req = urllib.request.Request(url)
     with urllib.request.urlopen(req) as response:
         if response.status == 200:
-            tree = ET.parse(response)
-            root = tree.getroot()
+            soup = BeautifulSoup(response, 'xml')
         else:
             print('Please, check the correctness of the request')
+    cols = ['id', 'updated', 'title', 'summary', 'author', 'link']
+    articles = pd.DataFrame(columns=cols)
+    # articles = articles.set_index('id')
 
-    articles = []
-    for entry in root.findall('entry'):
-        title = entry.find('title').text
-        articles.append(title)
-    print(articles)
+    for tag in soup.find_all('entry'):
+        # row_to_concat = pd.DataFrame({'id': [0],
+        #                               'updated': tag.updated,
+        #                               'title': tag.title,
+        #                               'summary': tag.summary,
+        #                               'author': [n.string for n in tag.find_all('name')],
+        #                               'link': tag.find(title='pdf').get('href')})
+        # articles = pd.concat([articles, row_to_concat])
+        print([n.string for n in tag.find_all('name')])
+
+
+    # print(articles.head())
+    # print(articles.describe())
 
 
 def main():
